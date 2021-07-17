@@ -1,0 +1,59 @@
+version: '3.5'
+services:
+  zipkin-server:
+    image: openzipkin/zipkin
+    container_name: zipkin1
+    ports:
+      - "9411:9411"
+
+  discovery:
+    image: wetorek/service-registry
+    container_name: service-registry
+    build:
+      context: ./service-registry
+      dockerfile: Dockerfile
+    ports:
+      - "8761:8761"
+
+  catalog-service:
+    image: wetorek/catalog-service
+    container_name: catalog-service
+    build:
+      context: ./catalog-service
+      dockerfile: Dockerfile
+    ports:
+      - "8181:8181"
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery:8761/eureka/
+      SPRING.ZIPKIN.BASE-URL: http://zipkin-server:9411
+
+    links:
+      - discovery
+
+  inventory-service:
+    image: wetorek/inventory-service
+    container_name: inventory-service
+    build:
+      context: ./inventory-service
+      dockerfile: Dockerfile
+    ports:
+      - "7171:7171"
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery:8761/eureka/
+      SPRING.ZIPKIN.BASE-URL: http://zipkin-server:9411
+    links:
+      - discovery
+
+  product-service:
+    image: wetorek/product-service
+    container_name: product-service
+    build:
+      context: ./product-service
+      dockerfile: Dockerfile
+    ports:
+      - "6161:6161"
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery:8761/eureka/
+      SPRING.ZIPKIN.BASE-URL: http://zipkin-server:9411
+    links:
+      - discovery
