@@ -15,6 +15,20 @@ services:
     ports:
       - "8761:8761"
 
+  gateway:
+    image: wetorek/gateway-service
+    container_name: service-gateway
+    build:
+      context: ./gateway-service
+      dockerfile: Dockerfile
+    ports:
+      - "8765:8765"
+    environment:
+      EUREKA.CLIENT.SERVICEURL.DEFAULTZONE: http://discovery:8761/eureka/
+      SPRING.ZIPKIN.BASE-URL: http://zipkin-server:9411
+    links:
+      - discovery
+
   catalog-service:
     image: wetorek/catalog-service
     container_name: catalog-service
@@ -24,9 +38,8 @@ services:
     ports:
       - "8181:8181"
     environment:
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery:8761/eureka/
+      EUREKA.CLIENT.SERVICEURL.DEFAULTZONE: http://discovery:8761/eureka/
       SPRING.ZIPKIN.BASE-URL: http://zipkin-server:9411
-
     links:
       - discovery
 
@@ -39,7 +52,7 @@ services:
     ports:
       - "7171:7171"
     environment:
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery:8761/eureka/
+      EUREKA.CLIENT.SERVICEURL.DEFAULTZONE: http://discovery:8761/eureka/
       SPRING.ZIPKIN.BASE-URL: http://zipkin-server:9411
     links:
       - discovery
@@ -53,7 +66,7 @@ services:
     ports:
       - "6161:6161"
     environment:
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery:8761/eureka/
+      EUREKA.CLIENT.SERVICEURL.DEFAULTZONE: http://discovery:8761/eureka/
       SPRING.ZIPKIN.BASE-URL: http://zipkin-server:9411
     links:
       - discovery
