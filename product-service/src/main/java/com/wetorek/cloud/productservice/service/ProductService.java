@@ -3,9 +3,8 @@ package com.wetorek.cloud.productservice.service;
 import com.google.common.collect.Lists;
 import com.wetorek.cloud.productservice.domain.Availability;
 import com.wetorek.cloud.productservice.domain.Product;
-import com.wetorek.cloud.productservice.repository.CatalogFeignClient;
-import com.wetorek.cloud.productservice.repository.InventoryFeignClient;
-import com.wetorek.cloud.productservice.repository.dto.AvailabilityRequestDto;
+import com.wetorek.cloud.productservice.repository.wrapper.CatalogClientWrapper;
+import com.wetorek.cloud.productservice.repository.wrapper.InventoryClientWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -23,33 +22,32 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 public class ProductService {
-    private final CatalogFeignClient catalogClient;
-    private final InventoryFeignClient inventoryClient;
+    private final CatalogClientWrapper catalogClientWrapper;
+    private final InventoryClientWrapper inventoryClientWrapper;
 
     @Transactional
     public Optional<Product> getAvailableProductById(String uniqId) {
         log.info("Getting available products by id: {}", uniqId);
-        var product = catalogClient.getProductById(uniqId);
-        var availability = inventoryClient.getAvailabilityByListOfUniqIds(
-                new AvailabilityRequestDto(Lists.newArrayList(uniqId))).getAvailabilities().get(0);
-        if (Objects.equals(availability.getAmount(), 0) || availability.getAmount() == null) {
+        var product = catalogClientWrapper.getProductById(uniqId);
+        var availability =
+                inventoryClientWrapper.getAvailabilityByListOfUniqIds(Lists.newArrayList(uniqId)).get(0);
+        if (availability == null || Objects.equals(availability.getAmount(), 0) || availability.getAmount() == null) {
             log.info("No available products found for id: {}", uniqId);
             return Optional.empty();
         }
-        return Optional.of(product);
+        return product;
     }
 
     @Transactional
     public List<Product> getAvailableProducts(String sku) {
         log.info("Getting available products by sku: {}", sku);
-        var products = catalogClient.getProductsBySku(sku).getProducts().stream()
+        var products = catalogClientWrapper.getProductsBySku(sku).stream()
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
         var ids = products.stream()
                 .map(Product::getUniq_id)
                 .collect(Collectors.toList());
-        var availabilityMap = inventoryClient.getAvailabilityByListOfUniqIds(new AvailabilityRequestDto(ids))
-                .getAvailabilities().stream()
+        var availabilityMap = inventoryClientWrapper.getAvailabilityByListOfUniqIds(ids).stream()
                 .filter(Objects::nonNull)
                 .collect(Collectors.toMap(Availability::getUniq_id, Function.identity()));
         return products.stream()
