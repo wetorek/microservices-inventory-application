@@ -15,6 +15,32 @@ services:
     ports:
       - "8761:8761"
 
+  auth-database:
+    image: mysql:8.0
+    container_name: auth-database
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: mysqlauthdb
+      MYSQL_USER: username
+      MYSQL_PASSWORD: password
+
+  auth-service:
+    image: wetorek/auth-service
+    container_name: auth-service
+    build:
+      context: ./auth-service
+      dockerfile: Dockerfile
+    ports:
+      - "5151:5151"
+    environment:
+      EUREKA.CLIENT.SERVICEURL.DEFAULTZONE: http://discovery:8761/eureka/
+      SPRING.ZIPKIN.BASE-URL: http://zipkin-server:9411
+      SPRING.DATASOURCE.URL: jdbc:mysql://auth-database:3306/mysqlauthdb
+    links:
+      - discovery
+
   gateway:
     image: wetorek/gateway-service
     container_name: service-gateway
@@ -40,6 +66,7 @@ services:
     environment:
       EUREKA.CLIENT.SERVICEURL.DEFAULTZONE: http://discovery:8761/eureka/
       SPRING.ZIPKIN.BASE-URL: http://zipkin-server:9411
+      SECURITY.OAUTH2.RESOURCE.TOKEN-INFO-URI: http://auth-service:5151/oauth/check_token
     links:
       - discovery
 
@@ -54,6 +81,7 @@ services:
     environment:
       EUREKA.CLIENT.SERVICEURL.DEFAULTZONE: http://discovery:8761/eureka/
       SPRING.ZIPKIN.BASE-URL: http://zipkin-server:9411
+      SECURITY.OAUTH2.RESOURCE.TOKEN-INFO-URI: http://auth-service:5151/oauth/check_token
     links:
       - discovery
 
@@ -68,5 +96,7 @@ services:
     environment:
       EUREKA.CLIENT.SERVICEURL.DEFAULTZONE: http://discovery:8761/eureka/
       SPRING.ZIPKIN.BASE-URL: http://zipkin-server:9411
+      SECURITY.OAUTH2.RESOURCE.TOKEN-INFO-URI: http://auth-service:5151/oauth/check_token
+      SECURITY.OAUTH2.CLIENT.ACCESS-TOKEN-URI: http://auth-service:5151/oauth/token
     links:
       - discovery

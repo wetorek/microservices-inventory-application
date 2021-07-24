@@ -9,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.util.List;
 import java.util.Map;
@@ -28,6 +30,8 @@ public class ProductService {
     @Transactional
     public Optional<Product> getAvailableProductById(String uniqId) {
         log.info("Getting available products by id: {}", uniqId);
+        var val =  ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest().getHeader("Authorization");
+        System.out.println(val);
         var product = catalogClientWrapper.getProductById(uniqId);
         var availability =
                 inventoryClientWrapper.getAvailabilityByListOfUniqIds(Lists.newArrayList(uniqId)).get(0);

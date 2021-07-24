@@ -16,11 +16,11 @@ public class InventoryClientWrapper {
 
     private final InventoryFeignClient inventoryFeignClient;
 
-    @HystrixCommand(
-            commandKey = "availability-by-ids",
-            fallbackMethod = "getDefaultAvailability",
-            threadPoolKey = "inventoryClientThreadPool"
-    )
+//    @HystrixCommand(
+//            commandKey = "availability-by-ids",
+//            fallbackMethod = "getDefaultAvailability",
+//            threadPoolKey = "inventoryClientThreadPool"
+//    )
     public List<Availability> getAvailabilityByListOfUniqIds(List<String> ids) {
         var request = new AvailabilityRequestDto(ids);
         return inventoryFeignClient.getAvailabilityByListOfUniqIds(request).getAvailabilities();
